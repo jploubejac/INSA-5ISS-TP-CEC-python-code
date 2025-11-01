@@ -1,6 +1,6 @@
 import openstack 
 
-def cleanup(conn):
+def nettoyage(conn):
     for server in conn.compute.servers():
         if server.name in ["fabricelebon_py", "solangelaclient_py", "div_py", "mule_py", "sous_py", "add_py"]:
             print(f"Suppression de la machine {server.name} ({server.id})...")
@@ -42,8 +42,6 @@ def cleanup(conn):
     print("Nettoyage terminé")
 
 def réseaux(conn):
-    
-
     public_network = conn.network.find_network("public")
     sub_public = None
     for subnet in conn.network.subnets(network_id=public_network.id):
@@ -51,8 +49,6 @@ def réseaux(conn):
             sub_public = subnet
             break
     if sub_public is None: return errprint("Public subnet not found")
-
-
     network1 = conn.network.create_network(name="mynetwork1")
     print("Le réseau Network1 ID:", network1.id)
     subnet1a = conn.network.create_subnet(
@@ -69,7 +65,6 @@ def réseaux(conn):
         cidr='017.015.014.128/25' 
     )
     print("Le sous-réseau Subnet1b ID:", subnet1b.id)
-
     network2 = conn.network.create_network(name="mynetwork2")
     print("Le réseau Network2 ID:", network2.id)
     subnet2 = conn.network.create_subnet(
@@ -79,8 +74,6 @@ def réseaux(conn):
         cidr='016.038.014.0/24'
     )
     print("Le sous-réseau Subnet2 ID:", subnet2.id)
-    
-
     router_public_1 = conn.network.create_router(name="router_public_1")
     print("Le routeur Router_Public_1 ID:", router_public_1.id)
     conn.network.add_interface_to_router(router_public_1, subnet_id=subnet1a.id)
@@ -92,11 +85,10 @@ def réseaux(conn):
     conn.network.add_interface_to_router(router_1_2, subnet_id=subnet1b.id)
     conn.network.add_interface_to_router(router_1_2, subnet_id=subnet2.id)
     print("Le routeur Router_1_2 a été connecté au sous-réseau Subnet1b et au sous-réseau Subnet2.")
-
     print("Configuration des réseaux terminée")
-    return network1, subnet1a, subnet1b, network2, subnet2, router_public_1, router_1_2
+    return network1, network2
 
-def machine(conn, network1, subnet1a, subnet1b, network2, subnet2, router_public_1, router_1_2):
+def machine(conn, network1, network2):
     image = conn.compute.find_image("Ubuntu4CLV")
     flavor = conn.compute.find_flavor("small2")
     name = ["fabricelebon_py", "solangelaclient_py", "div_py", "mule_py", "sous_py","add_py"]
@@ -116,6 +108,6 @@ def machine(conn, network1, subnet1a, subnet1b, network2, subnet2, router_public
     print("Toutes les machines ont été créées")
 
 conn = openstack.connect()
-cleanup(conn)
+nettoyage(conn)
 machine(conn, *réseaux(conn))
 print ("Configuration terminée. J'espère que tout fonctionne bien !")
